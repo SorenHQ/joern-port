@@ -15,7 +15,7 @@ import (
 
 func JoernCommand(ctx context.Context, url, command string) (any, error) {
 	body := map[string]any{"query": command}
-	url=fmt.Sprintf("%s/query-sync",url)
+
 	bodyByte, _ := sonic.Marshal(body)
 	resp, status, err := CustomCall(ctx, "POST", bodyByte, url, nil)
 	if err != nil {
@@ -24,8 +24,12 @@ func JoernCommand(ctx context.Context, url, command string) (any, error) {
 	if status != 200 {
 		return nil, errors.New("server is unavailable or bad request")
 	}
-	return ParseJoernStdout(resp)
-
+	response:=map[string]any{}
+	sonic.Unmarshal(resp, &response)
+	if _,ok:=response["stdout"];ok{
+		return ParseJoernStdout(resp)
+	}
+	return response, nil
 }
 func CustomCall(ctx context.Context, method string, data []byte, url string, headers map[string]string) ([]byte, int, error) {
 	bodyReader := bytes.NewReader(data)

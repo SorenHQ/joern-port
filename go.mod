@@ -5,6 +5,7 @@ go 1.25.1
 require (
 	github.com/bytedance/sonic v1.14.2
 	github.com/gofiber/fiber/v2 v2.52.9
+	github.com/gorilla/websocket v1.5.3
 	github.com/joho/godotenv v1.5.1
 )
 
