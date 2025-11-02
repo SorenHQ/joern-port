@@ -6,7 +6,7 @@ type CommandRequest struct {
 }
 type OpenProjectRequest struct {
 	Url     string `json:"url"`
-	Project string `json:"project"`
+	Project string `json:"project" validate:"required,alphanumeric"`
 }
 type Response struct {
 	Data  any `json:"data"`

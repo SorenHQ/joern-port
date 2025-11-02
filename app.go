@@ -49,7 +49,7 @@ type MessageHandler struct{}
 
 func (h *MessageHandler) Recv(message string) {
 	// Implement message handling logic
-	fmt.Println("Received message:", message)
+	fmt.Println("Received Joern WebSocket message:", message)
 
 }
 

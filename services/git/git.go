@@ -108,10 +108,10 @@ func NewGitDetailsHandler(detailChan chan models.GitResponse) *GitService {
 	return gitService
 }
 
-func GitClonePull(dir, url string, pull bool) error{
+func GitClonePull(project, url string, pull bool) error{
 	if gitService==nil{
 		return errors.New("git service not initialized")
 	}
-	go gitService.ClonePull(dir, url, pull)
+	go gitService.ClonePull(project, url, pull)
 	return nil
 }
