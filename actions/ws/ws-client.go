@@ -2,18 +2,47 @@ package wsHandler
 
 import (
 	"context"
+	"fmt"
+	"joern-output-parser/etc"
 	"log"
-	"strings"
+	"net/url"
+
 
 	"github.com/gorilla/websocket"
 )
 
-var conn *websocket.Conn
+type MessageHandler interface{
+	Recv(string)
+}
+type ResultHandlers struct {
+	// Define your result handlers here
+ conn *websocket.Conn
+ serverUrl string
+ messageHandler MessageHandler
+}
 
-func wsConnection(serverURL string, messageChan chan []byte) error {
+func (rh *ResultHandlers)getResult( message []byte) {
+	// fmt.Println(string(message))
+	if string(message) =="connected"{
+		fmt.Printf("websocket connected to %s\n", rh.serverUrl)
+		return
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	
+	url := fmt.Sprintf("http://%s/result/%s", rh.serverUrl, string(message))
+	response, _, _ := etc.CustomCall(ctx, "GET", nil, url, nil)
+	respBody,err:=etc.ParseJoernStdoutToString(response)
+	if err!=nil{
+		log.Println("Error parsing response:", err)
+		return
+	}
+	rh.messageHandler.Recv(respBody)
+}
+func (rh *ResultHandlers)wsConnection(serverURL string, messageChan chan []byte) error {
 	// Replace with your WebSocket server URL
-	if conn != nil {
-		conn.Close()
+	if rh.conn != nil {
+		rh.conn.Close()
 		log.Println("reconnect to ", serverURL)
 	}
 
@@ -39,11 +68,11 @@ func wsConnection(serverURL string, messageChan chan []byte) error {
 	return nil
 }
 
-func ConnectToServer(serverURL string, messageHandler func(serverURL string, message []byte)) error {
+func (rh *ResultHandlers)connectToServer() error {
 	messageChan := make(chan []byte)
 	ctx := context.WithoutCancel(context.Background())
-	wsUrl := strings.ReplaceAll(serverURL, "http://", "ws://")
-	err := wsConnection(wsUrl+"/connect", messageChan)
+	wsUrl :=fmt.Sprintf("ws://%s",rh.serverUrl)
+	err := rh.wsConnection(wsUrl+"/connect", messageChan)
 	if err != nil {
 		log.Fatal("Error connecting to WebSocket:", err)
 		return err
@@ -52,11 +81,30 @@ func ConnectToServer(serverURL string, messageHandler func(serverURL string, mes
 		for {
 			select {
 			case message := <-messageChan:
-				messageHandler(serverURL, message)
+				rh.getResult(message)
 			case <-ctx.Done():
 				return
 			}
 		}
 	}()
 	return nil
+}
+
+
+func NewResultHandlers(serverURL string,messHandler MessageHandler) (*ResultHandlers,error) {
+	url,err:=url.Parse(serverURL)
+	if err!=nil{
+		return nil,err
+	}
+
+	rh:=ResultHandlers{
+		conn: nil,
+		serverUrl: url.Host,
+		messageHandler: messHandler,
+	}
+	err=rh.connectToServer()
+	if err!=nil{
+		return nil,err
+	}
+	return &rh,nil
 }

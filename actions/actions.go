@@ -1,10 +1,9 @@
 package actions
 
 import (
-	"context"
 	"errors"
 	"fmt"
-	wsHandler "joern-output-parser/actions/ws"
+	"joern-output-parser/env"
 	"joern-output-parser/etc"
 	"joern-output-parser/models"
 	"regexp"
@@ -18,13 +17,12 @@ func queryhandler(c *fiber.Ctx) error {
 	if err := c.BodyParser(&input); err != nil {
 		return c.JSON(models.Response{Data: nil, Error: fiber.ErrBadRequest})
 	}
+	if input.Url == "" {
+		input.Url = env.GetJoernUrl()
+	}
 	url := fmt.Sprintf("%s/query-sync", input.Url)
 	if input.Mode == "async" {
 		url = fmt.Sprintf("%s/query", input.Url)
-		err := wsHandler.ConnectToServer(input.Url, messageHandler)
-		if err != nil {
-			return c.JSON(models.Response{Data: nil, Error: err.Error()})
-		}
 	}
 	res, err := etc.JoernCommand(c.Context(), url, input.Query)
 	if err != nil {
@@ -37,6 +35,9 @@ func openProjectHandler(c *fiber.Ctx) error {
 	input := models.OpenProjectRequest{}
 	if err := c.BodyParser(&input); err != nil {
 		return c.JSON(models.Response{Data: nil, Error: fiber.ErrBadRequest})
+	}
+	if input.Url == "" {
+		input.Url = env.GetJoernUrl()
 	}
 	url := fmt.Sprintf("%s/query-sync", input.Url)
 	body := map[string]any{"query": fmt.Sprintf(`open("%s").get.name`, input.Project)}
@@ -64,11 +65,4 @@ func openProjectHandler(c *fiber.Ctx) error {
 	return c.JSON(models.Response{Data: respMap, Error: err})
 }
 
-func messageHandler(url string, message []byte) {
-	fmt.Println(string(message))
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	url = fmt.Sprintf("%s/result/%s", url, string(message))
-	response, _, _ := etc.CustomCall(ctx, "GET", nil, url, nil)
-	fmt.Println(etc.ParseJoernStdout(response))
-}
+

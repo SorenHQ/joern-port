@@ -32,3 +32,11 @@ func get_env_value(key string) string {
 	}
 	return os.Getenv(key)
 }
+
+func GetJoernUrl() (url string) {
+	url = get_env_value("JOERN_URL")
+	if url == "" {
+		return "http://localhost:8080"
+	}
+	return url
+}

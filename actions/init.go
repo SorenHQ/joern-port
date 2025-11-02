@@ -1,9 +1,13 @@
 package actions
-import(
-				"github.com/gofiber/fiber/v2"
 
+import (
+	wsHandler "joern-output-parser/actions/ws"
+
+	"github.com/gofiber/fiber/v2"
 )
-	func RegisterAll(api fiber.Router) {
+var resultHandler *wsHandler.ResultHandlers
+	func RegisterAll(api fiber.Router,wsHandler *wsHandler.ResultHandlers) {
+		resultHandler = wsHandler
 		api.Post("/open",openProjectHandler)
 		api.Post("/query",queryhandler)
 	}
