@@ -40,3 +40,12 @@ func GetJoernUrl() (url string) {
 	}
 	return url
 }
+
+
+func GetProjectReposPath() (path string) {
+	path = get_env_value("PROJECTS_PATH")
+	if path == "" {
+		return "./projects"
+	}
+	return path
+}

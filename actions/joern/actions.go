@@ -1,4 +1,4 @@
-package actions
+package joernControllers
 
 import (
 	"errors"

@@ -91,7 +91,7 @@ func (rh *ResultHandlers)connectToServer() error {
 }
 
 
-func NewResultHandlers(serverURL string,messHandler MessageHandler) (*ResultHandlers,error) {
+func NewJoernResultHandlers(serverURL string,messHandler MessageHandler) (*ResultHandlers,error) {
 	url,err:=url.Parse(serverURL)
 	if err!=nil{
 		return nil,err
