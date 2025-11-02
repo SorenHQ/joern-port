@@ -4,11 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"joern-output-parser/env"
-	"joern-output-parser/etc"
-	"joern-output-parser/models"
 	"os"
 	"regexp"
+
+	"github.com/SorenHQ/joern-port/env"
+	"github.com/SorenHQ/joern-port/etc"
+	"github.com/SorenHQ/joern-port/models"
 
 	"github.com/bytedance/sonic"
 	"github.com/gofiber/fiber/v2"
@@ -46,8 +47,8 @@ func openProjectHandler(c *fiber.Ctx) error {
 		return c.JSON(models.Response{Data: nil, Error: "Project not found"})
 	}
 	url := fmt.Sprintf("%s/query-sync", input.Url)
-	importresult,err:=importCode(c.Context(),dir,input.Project,url)
-	if err!=nil{
+	importresult, err := importCode(c.Context(), dir, input.Project, url)
+	if err != nil {
 		return c.JSON(models.Response{Data: importresult, Error: err.Error()})
 	}
 	body := map[string]any{"query": fmt.Sprintf(`open("%s").get.name`, input.Project)}
@@ -75,14 +76,13 @@ func openProjectHandler(c *fiber.Ctx) error {
 	return c.JSON(models.Response{Data: respMap, Error: err})
 }
 
-
-func importCode(ctx context.Context, dir, project ,url string) (map[string]any,error){
+func importCode(ctx context.Context, dir, project, url string) (map[string]any, error) {
 
 	body := map[string]any{"query": fmt.Sprintf(`importCode("%s", "%s")`, dir, project)}
 	bodyByte, _ := sonic.Marshal(body)
 	resp, status, err := etc.CustomCall(ctx, "POST", bodyByte, url, nil)
 	if err != nil {
-		return nil,err
+		return nil, err
 
 	}
 	if status != 200 {
@@ -91,9 +91,8 @@ func importCode(ctx context.Context, dir, project ,url string) (map[string]any,e
 	respMap := map[string]any{}
 	err = sonic.Unmarshal(resp, &respMap)
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
 
-	return respMap,nil
+	return respMap, nil
 }
-

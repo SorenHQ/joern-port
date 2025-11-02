@@ -1,4 +1,4 @@
-module joern-output-parser
+module github.com/SorenHQ/joern-port
 
 go 1.25.1
 

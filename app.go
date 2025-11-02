@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
-	joernControllers "joern-output-parser/actions/joern"
-	wsHandler "joern-output-parser/actions/joern/ws"
-	projectControllers "joern-output-parser/actions/projects"
-	"joern-output-parser/env"
-	"joern-output-parser/models"
 	"log"
+
+	joernControllers "github.com/SorenHQ/joern-port/actions/joern"
+	wsHandler "github.com/SorenHQ/joern-port/actions/joern/ws"
+	projectControllers "github.com/SorenHQ/joern-port/actions/projects"
+	"github.com/SorenHQ/joern-port/env"
+	"github.com/SorenHQ/joern-port/models"
 
 	"github.com/bytedance/sonic"
 	"github.com/gofiber/fiber/v2"

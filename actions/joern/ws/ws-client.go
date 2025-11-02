@@ -3,43 +3,43 @@ package wsHandler
 import (
 	"context"
 	"fmt"
-	"joern-output-parser/etc"
 	"log"
 	"net/url"
 
+	"github.com/SorenHQ/joern-port/etc"
 
 	"github.com/gorilla/websocket"
 )
 
-type MessageHandler interface{
+type MessageHandler interface {
 	Recv(string)
 }
 type ResultHandlers struct {
 	// Define your result handlers here
- conn *websocket.Conn
- serverUrl string
- messageHandler MessageHandler
+	conn           *websocket.Conn
+	serverUrl      string
+	messageHandler MessageHandler
 }
 
-func (rh *ResultHandlers)getResult( message []byte) {
+func (rh *ResultHandlers) getResult(message []byte) {
 	// fmt.Println(string(message))
-	if string(message) =="connected"{
-		fmt.Printf("websocket connected to %s\n", rh.serverUrl)
+	if string(message) == "connected" {
+		log.Default().Printf("websocket connected to %s\n", rh.serverUrl)
 		return
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	
+
 	url := fmt.Sprintf("http://%s/result/%s", rh.serverUrl, string(message))
 	response, _, _ := etc.CustomCall(ctx, "GET", nil, url, nil)
-	respBody,err:=etc.ParseJoernStdoutToString(response)
-	if err!=nil{
+	respBody, err := etc.ParseJoernStdoutToString(response)
+	if err != nil {
 		log.Println("Error parsing response:", err)
 		return
 	}
 	rh.messageHandler.Recv(respBody)
 }
-func (rh *ResultHandlers)wsConnection(serverURL string, messageChan chan []byte) error {
+func (rh *ResultHandlers) wsConnection(serverURL string, messageChan chan []byte) error {
 	// Replace with your WebSocket server URL
 	if rh.conn != nil {
 		rh.conn.Close()
@@ -68,10 +68,10 @@ func (rh *ResultHandlers)wsConnection(serverURL string, messageChan chan []byte)
 	return nil
 }
 
-func (rh *ResultHandlers)connectToServer() error {
+func (rh *ResultHandlers) connectToServer() error {
 	messageChan := make(chan []byte)
 	ctx := context.WithoutCancel(context.Background())
-	wsUrl :=fmt.Sprintf("ws://%s",rh.serverUrl)
+	wsUrl := fmt.Sprintf("ws://%s", rh.serverUrl)
 	err := rh.wsConnection(wsUrl+"/connect", messageChan)
 	if err != nil {
 		log.Fatal("Error connecting to WebSocket:", err)
@@ -90,21 +90,20 @@ func (rh *ResultHandlers)connectToServer() error {
 	return nil
 }
 
-
-func NewJoernResultHandlers(serverURL string,messHandler MessageHandler) (*ResultHandlers,error) {
-	url,err:=url.Parse(serverURL)
-	if err!=nil{
-		return nil,err
+func NewJoernResultHandlers(serverURL string, messHandler MessageHandler) (*ResultHandlers, error) {
+	url, err := url.Parse(serverURL)
+	if err != nil {
+		return nil, err
 	}
 
-	rh:=ResultHandlers{
-		conn: nil,
-		serverUrl: url.Host,
+	rh := ResultHandlers{
+		conn:           nil,
+		serverUrl:      url.Host,
 		messageHandler: messHandler,
 	}
-	err=rh.connectToServer()
-	if err!=nil{
-		return nil,err
+	err = rh.connectToServer()
+	if err != nil {
+		return nil, err
 	}
-	return &rh,nil
+	return &rh, nil
 }

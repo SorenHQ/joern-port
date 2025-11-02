@@ -5,29 +5,30 @@ import (
 	"fmt"
 	"log"
 
-	"joern-output-parser/env"
-	"joern-output-parser/models"
 	"os"
+
+	"github.com/SorenHQ/joern-port/env"
+	"github.com/SorenHQ/joern-port/models"
 
 	"github.com/go-git/go-git/v6"
 )
 
 var gitService *GitService
 
-type GitService struct{
+type GitService struct {
 	detailChan chan models.GitResponse
 }
+
 // impl io.Writer
 func (gs *GitService) Write(p []byte) (n int, err error) {
 	if gs.detailChan == nil {
 		return 0, errors.New("detail channel not initialized")
 	}
-	gs.detailChan<- models.GitResponse{Action: "log", Status: "success", Message: string(p)}
+	gs.detailChan <- models.GitResponse{Action: "log", Status: "success", Message: string(p)}
 	return len(p), nil
 }
 
-
-func (gs *GitService)ClonePull(project, url string, pull bool)  {
+func (gs *GitService) ClonePull(project, url string, pull bool) {
 	if gs.detailChan == nil {
 		gs.detailChan = make(chan models.GitResponse)
 		defer close(gs.detailChan)
@@ -42,12 +43,12 @@ func (gs *GitService)ClonePull(project, url string, pull bool)  {
 			Progress: gs,
 		})
 		if err != nil {
-			gs.detailChan<- models.GitResponse{Action: "clone", Status: "error", Error: err.Error()}
+			gs.detailChan <- models.GitResponse{Action: "clone", Status: "error", Error: err.Error()}
 			return
 		}
 
 		ref, _ := repo.Head()
-		gs.detailChan<- models.GitResponse{
+		gs.detailChan <- models.GitResponse{
 			Action:   "clone",
 			Status:   "success",
 			Branch:   ref.Name().Short(),
@@ -60,14 +61,14 @@ func (gs *GitService)ClonePull(project, url string, pull bool)  {
 	// Open existing repo and pull latest
 	repo, err := git.PlainOpen(dir)
 	if err != nil {
-		gs.detailChan<- models.GitResponse{Action: "open", Status: "error", Error: err.Error()}
+		gs.detailChan <- models.GitResponse{Action: "open", Status: "error", Error: err.Error()}
 		return
 	}
 	if pull {
 		w, _ := repo.Worktree()
 		err = w.Pull(&git.PullOptions{RemoteName: "origin"})
 		if err != nil && err != git.NoErrAlreadyUpToDate {
-			gs.detailChan<- models.GitResponse{Action: "pull", Status: "error", Error: err.Error()}
+			gs.detailChan <- models.GitResponse{Action: "pull", Status: "error", Error: err.Error()}
 			return
 		}
 
@@ -79,7 +80,7 @@ func (gs *GitService)ClonePull(project, url string, pull bool)  {
 			msg = "Already up to date"
 		}
 
-		gs.detailChan<- models.GitResponse{
+		gs.detailChan <- models.GitResponse{
 			Action:   "pull",
 			Status:   status,
 			Branch:   ref.Name().Short(),
@@ -90,7 +91,7 @@ func (gs *GitService)ClonePull(project, url string, pull bool)  {
 	ref, _ := repo.Head()
 	status := "success"
 	msg := "Repository updated successfully"
-	gs.detailChan<- models.GitResponse{
+	gs.detailChan <- models.GitResponse{
 		Action:   "repo",
 		Status:   status,
 		Branch:   ref.Name().Short(),
@@ -99,17 +100,16 @@ func (gs *GitService)ClonePull(project, url string, pull bool)  {
 	}
 }
 
-
 func NewGitDetailsHandler(detailChan chan models.GitResponse) *GitService {
-	if gitService==nil{
+	if gitService == nil {
 		gitService = &GitService{detailChan: detailChan}
 	}
 	log.Default().Println("Git service initialized")
 	return gitService
 }
 
-func GitClonePull(project, url string, pull bool) error{
-	if gitService==nil{
+func GitClonePull(project, url string, pull bool) error {
+	if gitService == nil {
 		return errors.New("git service not initialized")
 	}
 	go gitService.ClonePull(project, url, pull)
