@@ -49,3 +49,14 @@ func GetProjectReposPath() (path string) {
 	}
 	return path
 }
+
+func GetRedisURI()string {
+	if os.Getenv("REDIS_URI")!=""{
+		return os.Getenv("REDIS_URI")
+	}
+	uri:=get_env_value("REDIS_URI")
+	if uri==""{
+		return "localhost:6379"
+	}
+	return uri
+}

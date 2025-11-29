@@ -12,7 +12,7 @@ import (
 )
 
 type MessageHandler interface {
-	Recv(string)
+	Recv(string,string)
 }
 type ResultHandlers struct {
 	// Define your result handlers here
@@ -37,7 +37,7 @@ func (rh *ResultHandlers) getResult(message []byte) {
 		log.Println("Error parsing response:", err)
 		return
 	}
-	rh.messageHandler.Recv(respBody)
+	rh.messageHandler.Recv(string(message),respBody)
 }
 func (rh *ResultHandlers) wsConnection(serverURL string, messageChan chan []byte) error {
 	// Replace with your WebSocket server URL

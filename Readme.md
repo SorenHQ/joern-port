@@ -25,6 +25,7 @@ Get the latest Joern release from:
 ### 3. Run Your Go App
 
 ```bash
+go mod tidy
 go run app.go
 ```
 
@@ -36,3 +37,7 @@ go run app.go
 * Go 1.25+
 * Running Joern server
 * GitHub access token (if needed for private repos)
+
+
+
+

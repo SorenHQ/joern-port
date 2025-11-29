@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -8,6 +9,7 @@ import (
 	wsHandler "github.com/SorenHQ/joern-port/actions/joern/ws"
 	projectControllers "github.com/SorenHQ/joern-port/actions/projects"
 	"github.com/SorenHQ/joern-port/env"
+	"github.com/SorenHQ/joern-port/etc/db"
 	"github.com/SorenHQ/joern-port/models"
 
 	"github.com/bytedance/sonic"
@@ -15,7 +17,9 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 )
-
+const(
+	JoernResultsTableInRedis="JOERN_RESULTS_CHANNEL"
+)
 func main() {
 	// http server config
 	app := fiber.New(fiber.Config{
@@ -48,9 +52,10 @@ func main() {
 
 type MessageHandler struct{}
 
-func (h *MessageHandler) Recv(message string) {
+func (h *MessageHandler) Recv(req_uuid,message string) {
 	// Implement message handling logic
 	fmt.Println("Received Joern WebSocket message:", message)
+	db.GetRedisClient().Publish(context.Background(),JoernResultsTableInRedis, req_uuid+"||"+message)
 
 }
 
@@ -58,5 +63,6 @@ func gitStatus(logger chan models.GitResponse) {
 	for {
 		status := <-logger
 		fmt.Println("Received GIT status:", status)
+		//call python api 
 	}
 }

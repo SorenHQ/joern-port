@@ -1,7 +1,6 @@
 package joernControllers
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -47,7 +46,7 @@ func openProjectHandler(c *fiber.Ctx) error {
 		return c.JSON(models.Response{Data: nil, Error: "Project not found"})
 	}
 	url := fmt.Sprintf("%s/query-sync", input.Url)
-	importresult, err := importCode(c.Context(), dir, input.Project, url)
+	importresult, err := etc.ImportCode(c.Context(), dir, input.Project, url)
 	if err != nil {
 		return c.JSON(models.Response{Data: importresult, Error: err.Error()})
 	}
@@ -76,23 +75,3 @@ func openProjectHandler(c *fiber.Ctx) error {
 	return c.JSON(models.Response{Data: respMap, Error: err})
 }
 
-func importCode(ctx context.Context, dir, project, url string) (map[string]any, error) {
-
-	body := map[string]any{"query": fmt.Sprintf(`importCode("%s", "%s")`, dir, project)}
-	bodyByte, _ := sonic.Marshal(body)
-	resp, status, err := etc.CustomCall(ctx, "POST", bodyByte, url, nil)
-	if err != nil {
-		return nil, err
-
-	}
-	if status != 200 {
-		return nil, errors.New("server is unavailable or bad request")
-	}
-	respMap := map[string]any{}
-	err = sonic.Unmarshal(resp, &respMap)
-	if err != nil {
-		return nil, err
-	}
-
-	return respMap, nil
-}
