@@ -1,4 +1,4 @@
-package main
+package joernPlugin
 
 import (
 	"context"
@@ -63,6 +63,7 @@ func workOnGitHandler(jobId string, git chan models.GitResponse) {
 	for {
 		select {
 		case status := <-git:
+			fmt.Println(status)
 			if status.Status == "success" {
 				PluginInstance.Progress(jobId, sdkModel.ProgressCommand, sdkModel.JobProgress{Progress: 100, Data: map[string]any{"msg": status.Message, "action": status.Action, "branch": status.Branch}})
 				continue

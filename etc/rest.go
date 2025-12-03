@@ -73,7 +73,7 @@ func JoernAsyncCommand(ctx context.Context, url, command string) (string, error)
 func CustomCall(ctx context.Context, method string, data []byte, url string, headers map[string]string) ([]byte, int, error) {
 	bodyReader := bytes.NewReader(data)
 
-	ctx, cancel := context.WithTimeout(ctx, time.Duration(5)*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, time.Duration(10)*time.Second)
 	defer cancel()
 	nreq, err := http.NewRequestWithContext(ctx, strings.ToUpper(method), strings.TrimSpace(url), bodyReader)
 	if err != nil {

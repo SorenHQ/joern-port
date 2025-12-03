@@ -10,7 +10,7 @@ import (
 )
 
 func GitProjectsRoutes(api fiber.Router, GitLogger chan models.GitResponse) {
-	gitServices.NewGitDetailsHandler(GitLogger)
+	gitServices.NewGitLogHandler(GitLogger)
 	api.Post("/git/repo", validation.ValidateBodyAs(models.GitRequest{}), cloneRepoHandler)
 
 }

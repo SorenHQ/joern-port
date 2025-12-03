@@ -101,13 +101,19 @@ func (gs *GitService) ClonePull(project, url string, pull bool) {
 }
 
 func NewGitDetailsHandler(detailChan chan models.GitResponse) *GitService {
-	if gitService == nil {
-		gitService = &GitService{detailChan: detailChan}
-	}
+    gitService :=&GitService{detailChan: detailChan}
+	
 	log.Default().Println("Git service initialized")
 	return gitService
 }
 
+func NewGitLogHandler(detailChan chan models.GitResponse) *GitService {
+	if gitService == nil {
+		gitService = &GitService{detailChan: detailChan}
+	}
+	log.Default().Println("Git Logger service initialized")
+	return gitService
+}
 func GitClonePull(project, url string, pull bool) error {
 	if gitService == nil {
 		return errors.New("git service not initialized")

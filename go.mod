@@ -5,12 +5,13 @@ go 1.25.1
 require (
 	github.com/bytedance/sonic v1.14.2
 	github.com/go-git/go-git/v6 v6.0.0-20251029213217-0bbfc0875edd
+	github.com/go-redis/redis/v8 v8.11.5
 	github.com/gofiber/fiber/v2 v2.52.9
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/websocket v1.5.3
 	github.com/joho/godotenv v1.5.1
 	github.com/mehdi-shokohi/fiberValidation v1.0.3
-	github.com/sorenhq/go-plugin-sdk v0.0.2
+	github.com/sorenhq/go-plugin-sdk v0.0.5
 )
 
 require (
@@ -32,7 +33,6 @@ require (
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.14.1 // indirect
-	github.com/go-redis/redis/v8 v8.11.5 // indirect
 	github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8 // indirect
 	github.com/kevinburke/ssh_config v1.4.0 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect

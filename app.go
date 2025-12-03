@@ -11,15 +11,14 @@ import (
 	"github.com/SorenHQ/joern-port/env"
 	"github.com/SorenHQ/joern-port/etc/db"
 	"github.com/SorenHQ/joern-port/models"
+	joernPlugin "github.com/SorenHQ/joern-port/sorenPlugin"
 
 	"github.com/bytedance/sonic"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 )
-const(
-	JoernResultsTableInRedis="JOERN_RESULTS_CHANNEL"
-)
+
 func main() {
 	// http server config
 	app := fiber.New(fiber.Config{
@@ -43,7 +42,7 @@ func main() {
 	GitLogger := make(chan models.GitResponse)
 	go gitStatus(GitLogger)
 	projectControllers.GitProjectsRoutes(app, GitLogger)
-
+	go joernPlugin.LoadSorenPluginServer()
 	// Start Server
 	if err := app.Listen(env.GetPort()); err != nil {
 		log.Fatalf("Could not listen: %v", err)
@@ -55,7 +54,7 @@ type MessageHandler struct{}
 func (h *MessageHandler) Recv(req_uuid,message string) {
 	// Implement message handling logic
 	fmt.Println("Received Joern WebSocket message:", message)
-	db.GetRedisClient().Publish(context.Background(),JoernResultsTableInRedis, req_uuid+"||"+message)
+	db.GetRedisClient().Publish(context.Background(),joernPlugin.JoernResultsTableInRedis, req_uuid+"||"+message)
 
 }
 
