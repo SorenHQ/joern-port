@@ -48,7 +48,7 @@ func ImportCode(ctx context.Context, dir, project, url string) (map[string]any, 
 	if err != nil {
 		return nil, err
 	}
-
+	fmt.Println(respMap)
 	return respMap, nil
 }
 
@@ -63,6 +63,7 @@ func JoernAsyncCommand(ctx context.Context, url, command string) (string, error)
 	if status != 200 {
 		return "", errors.New("server is unavailable or bad request")
 	}
+	fmt.Println(string(bodyByte))
 	response:=map[string]any{}
 	sonic.Unmarshal(resp, &response)
 	if req_uuid,ok:=response["uuid"];ok{
@@ -73,7 +74,7 @@ func JoernAsyncCommand(ctx context.Context, url, command string) (string, error)
 func CustomCall(ctx context.Context, method string, data []byte, url string, headers map[string]string) ([]byte, int, error) {
 	bodyReader := bytes.NewReader(data)
 
-	ctx, cancel := context.WithTimeout(ctx, time.Duration(10)*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, time.Duration(20)*time.Second)
 	defer cancel()
 	nreq, err := http.NewRequestWithContext(ctx, strings.ToUpper(method), strings.TrimSpace(url), bodyReader)
 	if err != nil {
@@ -106,6 +107,8 @@ func CustomCall(ctx context.Context, method string, data []byte, url string, hea
 		fmt.Println("response error : ", err)
 		return nil, req.StatusCode, err
 	}
+
+	fmt.Println(string(body))
 	return body, req.StatusCode, err
 
 }

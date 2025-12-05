@@ -11,7 +11,8 @@ require (
 	github.com/gorilla/websocket v1.5.3
 	github.com/joho/godotenv v1.5.1
 	github.com/mehdi-shokohi/fiberValidation v1.0.3
-	github.com/sorenhq/go-plugin-sdk v0.0.5
+	github.com/nats-io/nats.go v1.47.0
+	github.com/sorenhq/go-plugin-sdk v0.0.8
 )
 
 require (
@@ -41,7 +42,6 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.16 // indirect
-	github.com/nats-io/nats.go v1.47.0 // indirect
 	github.com/nats-io/nkeys v0.4.11 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/pjbgf/sha1cd v0.5.0 // indirect
