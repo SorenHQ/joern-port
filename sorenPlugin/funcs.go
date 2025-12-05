@@ -100,13 +100,15 @@ func workOnQueryGraph(jobId string) {
 				continue
 			}
 			message := splitPayload[1]
-			res, err := etc.ParseJoernStdout([]byte(message))
+
+			// res, err := etc.ParseJoernStdout([]byte(message))
+			responsMap:=map[string]any{}
+			err:=sonic.Unmarshal([]byte(message), &responsMap)
 			if err != nil {
 				PluginInstance.Progress(jobId, sdkModel.ProgressCommand, sdkModel.JobProgress{Progress: 100, Details: map[string]any{"error": err.Error()}})
 				return
 			}
-
-			FinaleResponse := map[string]any{"results": res}
+			FinaleResponse := map[string]any{"results": responsMap}
 
 			PluginInstance.Progress(jobId, sdkModel.ProgressCommand, sdkModel.JobProgress{Progress: 100, Details: FinaleResponse})
 			return
