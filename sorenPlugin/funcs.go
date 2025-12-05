@@ -80,7 +80,7 @@ func workOnGitHandler(jobId string, git chan models.GitResponse) {
 	}
 
 }
-func workOnQueryGraph(jobId string) {
+func workOnQueryGraph(jobId , joern_uuid string) {
 	// simulate long processing
 	sub := db.GetRedisClient().Subscribe(context.Background(), JoernResultsTableInRedis)
 
@@ -92,7 +92,7 @@ func workOnQueryGraph(jobId string) {
 		case msg := <-ch:
 			payload := msg.Payload
 			// fmt.Println("Received payload:", payload)
-			if !strings.HasPrefix(payload, jobId) {
+			if !strings.HasPrefix(payload, joern_uuid) {
 				continue
 			}
 			splitPayload := strings.SplitN(payload, "||", 2)
@@ -105,15 +105,17 @@ func workOnQueryGraph(jobId string) {
 			responsMap:=map[string]any{}
 			err:=sonic.Unmarshal([]byte(message), &responsMap)
 			if err != nil {
+				fmt.Println("Done With Err Response")
 				PluginInstance.Progress(jobId, sdkModel.ProgressCommand, sdkModel.JobProgress{Progress: 100, Details: map[string]any{"error": err.Error()}})
 				return
 			}
 			FinaleResponse := map[string]any{"results": responsMap}
+				fmt.Println("Done With Success Response")
 
 			PluginInstance.Progress(jobId, sdkModel.ProgressCommand, sdkModel.JobProgress{Progress: 100, Details: FinaleResponse})
 			return
 
-		case <-time.After(45 * time.Minute):
+		case <-time.After(10 * time.Minute):
 			PluginInstance.Progress(jobId, sdkModel.ProgressCommand, sdkModel.JobProgress{Progress: 100, Details: map[string]any{"error": "timeout waiting for Joern response"}})
 			return
 		}

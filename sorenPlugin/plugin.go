@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/SorenHQ/joern-port/env"
 	"github.com/SorenHQ/joern-port/etc"
@@ -199,20 +200,22 @@ func LoadSorenPluginServer() {
 				if !ok {
 					return msg.Respond([]byte(`{"details": {"error": "invalid data"}}`))
 				}
-				// uuid, err := uuid.NewV6()
-				// if err != nil {
-				// 	return msg.Respond([]byte(`{"details": {"error": "service unavailable"}}`))
-				// }
+				uuid, err := uuid.NewV6()
+				if err != nil {
+					return msg.Respond([]byte(`{"details": {"error": "service unavailable"}}`))
+				}
 				// make a Joern Command Request
 				
+				msg.Respond([]byte(fmt.Sprintf(`{"jobId":"%s"}`, uuid.String())))
+					time.Sleep(1*time.Second)
 					fullQuery:=fmt.Sprintf(`workspace.project("%s").get.cpg.get.%s`, selectedProject, userQuery)
 					url := fmt.Sprintf("%s/query", env.GetJoernUrl()) // async call
 					req_uuid, err := etc.JoernAsyncCommand(PluginInstance.GetContext(), url, fullQuery)
 					if err != nil {
-						return msg.Respond([]byte(`{"details": {"error": "service unavailable"}}`))
+						PluginInstance.Progress(uuid.String(), sdkv2Models.ProgressCommand, sdkv2Models.JobProgress{Progress: 100, Details: map[string]any{"error": err.Error()}})
+						return nil
 					}
-					msg.Respond([]byte(fmt.Sprintf(`{"jobId":"%s"}`, req_uuid)))
-					go workOnQueryGraph(req_uuid)
+					go workOnQueryGraph(uuid.String(),req_uuid)
 				
 				return nil
 
