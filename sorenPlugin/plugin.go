@@ -40,6 +40,7 @@ func LoadSorenPluginServer() {
 
 	plugin.SetSettings(&sdkv2Models.Settings{
 		ReplyTo: "settings.config.submit",
+		Data:    getSavedData(),
 		Jsonui: map[string]any{
 			"type": "VerticalLayout",
 			"elements": []map[string]any{
@@ -64,17 +65,20 @@ func LoadSorenPluginServer() {
 					"type":        "string",
 					"title":       "Your Project Name",
 					"description": "Project Name",
+
 				},
 				"repository_name": map[string]any{
 					"type":        "string",
 					"title":       "Your Repository Name",
 					"description": "Github Respository name",
+			
 				},
 
 				"access_token": map[string]any{
 					"type":        "string",
 					"title":       "Fine Grained Access Token",
 					"description": "Github FineGrained Access Token",
+
 				},
 			},
 			"required": []string{"repository_name", "access_token", "project"},
@@ -153,7 +157,7 @@ func LoadSorenPluginServer() {
 				fmt.Println(uuid.String())
 				msg.Respond([]byte(fmt.Sprintf(`{"jobId":"%s"}`, uuid.String())))
 				go openJoernProject(uuid.String(), selectedProject)
-				
+
 				return nil
 			},
 		},
@@ -205,18 +209,18 @@ func LoadSorenPluginServer() {
 					return msg.Respond([]byte(`{"details": {"error": "service unavailable"}}`))
 				}
 				// make a Joern Command Request
-				
+
 				msg.Respond([]byte(fmt.Sprintf(`{"jobId":"%s"}`, uuid.String())))
-					time.Sleep(1*time.Second)
-					fullQuery:=fmt.Sprintf(`workspace.project("%s").get.cpg.get.%s`, selectedProject, userQuery)
-					url := fmt.Sprintf("%s/query", env.GetJoernUrl()) // async call
-					req_uuid, err := etc.JoernAsyncCommand(PluginInstance.GetContext(), url, fullQuery)
-					if err != nil {
-						PluginInstance.Progress(uuid.String(), sdkv2Models.ProgressCommand, sdkv2Models.JobProgress{Progress: 100, Details: map[string]any{"error": err.Error()}})
-						return nil
-					}
-					go workOnQueryGraph(uuid.String(),req_uuid)
-				
+				time.Sleep(1 * time.Second)
+				fullQuery := fmt.Sprintf(`workspace.project("%s").get.cpg.get.%s`, selectedProject, userQuery)
+				url := fmt.Sprintf("%s/query", env.GetJoernUrl()) // async call
+				req_uuid, err := etc.JoernAsyncCommand(PluginInstance.GetContext(), url, fullQuery)
+				if err != nil {
+					PluginInstance.Progress(uuid.String(), sdkv2Models.ProgressCommand, sdkv2Models.JobProgress{Progress: 100, Details: map[string]any{"error": err.Error()}})
+					return nil
+				}
+				go workOnQueryGraph(uuid.String(), req_uuid)
+
 				return nil
 
 			},
@@ -238,16 +242,15 @@ func settingsUpdateHandler(msg *nats.Msg) any {
 	err := sonic.Unmarshal(msg.Data, &settings)
 	if err != nil {
 		fmt.Println("Error Unmarshalling Settings:", err)
-		return map[string]any{"status": "error"}
+		return msg.Respond([]byte(`{"status": "error , bad request"}`))
 	}
 	err = os.WriteFile("my_database.json", msg.Data, 0644)
 	if err != nil {
 		fmt.Println("Error Writing Settings to File:", err)
-		return map[string]any{"status": "not_accepted"}
+		return msg.Respond([]byte(`{"status": "not_accepted"}`))
 
 	}
-
-	return map[string]any{"status": "accepted"}
+	return msg.Respond([]byte(`{"status": "accepted"}`))
 }
 
 func makeEnumsProject() []string {
@@ -268,7 +271,20 @@ func makeEnumsProject() []string {
 	return []string{savedSettings["project"].(string)}
 
 }
+func getSavedData() map[string]any {
+	contentJson, err := os.ReadFile("my_database.json")
+	if err != nil {
+		return map[string]any{}
+	}
 
+	savedSettings := map[string]any{}
+	err = sonic.Unmarshal(contentJson, &savedSettings)
+	if err != nil {
+		return map[string]any{}
+	}
+	return savedSettings
+
+}
 func GetProjectUrl(project string) string {
 	contentJson, err := os.ReadFile("my_database.json")
 	if err != nil {
@@ -285,4 +301,3 @@ func GetProjectUrl(project string) string {
 	}
 	return savedSettings["repository_name"].(string)
 }
-
