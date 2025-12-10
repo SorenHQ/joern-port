@@ -2,3 +2,4 @@ __*
 temp
 projects/*
 .env.*
+.env

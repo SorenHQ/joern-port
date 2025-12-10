@@ -12,7 +12,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/mehdi-shokohi/fiberValidation v1.0.3
 	github.com/nats-io/nats.go v1.47.0
-	github.com/sorenhq/go-plugin-sdk v0.1.1
+	github.com/sorenhq/go-plugin-sdk v0.1.5
 )
 
 require (

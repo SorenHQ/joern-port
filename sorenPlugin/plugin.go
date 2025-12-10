@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"time"
 
 	"github.com/SorenHQ/joern-port/env"
 	"github.com/SorenHQ/joern-port/etc"
@@ -39,8 +38,7 @@ func LoadSorenPluginServer() {
 	}, nil)
 
 	plugin.SetSettings(&sdkv2Models.Settings{
-		ReplyTo: "settings.config.submit",
-		Data:    getSavedData(),
+		Data: getSavedData(),
 		Jsonui: map[string]any{
 			"type": "VerticalLayout",
 			"elements": []map[string]any{
@@ -65,20 +63,17 @@ func LoadSorenPluginServer() {
 					"type":        "string",
 					"title":       "Your Project Name",
 					"description": "Project Name",
-
 				},
 				"repository_name": map[string]any{
 					"type":        "string",
 					"title":       "Your Repository Name",
 					"description": "Github Respository name",
-			
 				},
 
 				"access_token": map[string]any{
 					"type":        "string",
 					"title":       "Fine Grained Access Token",
 					"description": "Github FineGrained Access Token",
-
 				},
 			},
 			"required": []string{"repository_name", "access_token", "project"},
@@ -211,23 +206,23 @@ func LoadSorenPluginServer() {
 				// make a Joern Command Request
 
 				msg.Respond([]byte(fmt.Sprintf(`{"jobId":"%s"}`, uuid.String())))
-				time.Sleep(1 * time.Second)
+				PluginInstance.Progress(uuid.String(), sdkv2Models.ProgressCommand, sdkv2Models.JobProgress{Progress: 20, Details: map[string]any{"msg": "hello"}})
+
 				fullQuery := fmt.Sprintf(`workspace.project("%s").get.cpg.get.%s`, selectedProject, userQuery)
 				url := fmt.Sprintf("%s/query", env.GetJoernUrl()) // async call
 				req_uuid, err := etc.JoernAsyncCommand(PluginInstance.GetContext(), url, fullQuery)
 				if err != nil {
-					PluginInstance.Progress(uuid.String(), sdkv2Models.ProgressCommand, sdkv2Models.JobProgress{Progress: 100, Details: map[string]any{"error": err.Error()}})
+					PluginInstance.Done(uuid.String(),map[string]any{"error": err.Error()})
 					return nil
 				}
 				go workOnQueryGraph(uuid.String(), req_uuid)
 
 				return nil
-
 			},
 		},
 	})
 	event := sdkv2.NewEventLogger(sdkInstance)
-	event.Log("remote-mate-pc", sdkv2Models.LogLevelInfo, "Joern Plugin Started", nil)
+	event.Log("remote-mate-pc", sdkv2Models.LogLevelInfo, fmt.Sprintf("%s Plugin Started , Version %s", plugin.Intro.Name, plugin.Intro.Version), nil)
 	PluginInstance = plugin
 
 	err = plugin.Start()

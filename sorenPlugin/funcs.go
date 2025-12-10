@@ -20,24 +20,24 @@ func openJoernProject(jobId string, projectName string) {
 
 	dir := fmt.Sprintf("%s/%s", env.GetProjectReposPath(), projectName)
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		PluginInstance.Progress(jobId, sdkModel.ProgressCommand, sdkModel.JobProgress{Progress: 100, Details: map[string]any{"error": "Project not found"}})
+		PluginInstance.Done(jobId,  map[string]any{"error": "Project not found"})
 		return
 	}
 	url := fmt.Sprintf("%s/query-sync", env.GetJoernUrl())
 	importresult, err := etc.ImportCode(context.Background(), dir, projectName, url)
 	if err != nil {
-		PluginInstance.Progress(jobId, sdkModel.ProgressCommand, sdkModel.JobProgress{Progress: 100, Details: map[string]any{"info":importresult,"error": "timeout during joern operation"}})
+		PluginInstance.Done(jobId, map[string]any{"info":importresult,"error": "timeout during joern operation"})
 		return
 	}
 	body := map[string]any{"query": fmt.Sprintf(`open("%s").get.name`, projectName)}
 	bodyByte, _ := sonic.Marshal(body)
 	resp, status, err := etc.CustomCall(context.Background(), "POST", bodyByte, url, nil)
 	if err != nil {
-		PluginInstance.Progress(jobId, sdkModel.ProgressCommand, sdkModel.JobProgress{Progress: 100, Details: map[string]any{"error": err.Error()}})
+		PluginInstance.Done(jobId,  map[string]any{"error": err.Error()})
 		return
 	}
 	if status != 200 {
-		PluginInstance.Progress(jobId, sdkModel.ProgressCommand, sdkModel.JobProgress{Progress: 100, Details: map[string]any{"error": "server is unavailable or bad request"}})
+		PluginInstance.Done(jobId,  map[string]any{"error": "server is unavailable or bad request"})
 		return
 	}
 	respMap := map[string]any{}
@@ -50,12 +50,12 @@ func openJoernProject(jobId string, projectName string) {
 		re := regexp.MustCompile(`\s*"([^"]+)\"`)
 		out := re.FindStringSubmatch(respMap["stdout"].(string))
 		if len(out) > 1 {
-			PluginInstance.Progress(jobId, sdkModel.ProgressCommand, sdkModel.JobProgress{Progress: 100, Details: map[string]any{"result": respMap}})
+			PluginInstance.Done(jobId, map[string]any{"result": respMap})
 			return
 		}
 	}
 	respMap["error"] = "unable to open project"
-	PluginInstance.Progress(jobId, sdkModel.ProgressCommand, sdkModel.JobProgress{Progress: 100, Details: respMap})
+	PluginInstance.Done(jobId, respMap)
 }
 func workOnGitHandler(jobId string, git chan models.GitResponse) {
 	progress := 0
@@ -66,14 +66,14 @@ func workOnGitHandler(jobId string, git chan models.GitResponse) {
 			fmt.Println(status.Status)
 			if status.Status == "success" {
 				fmt.Println("Done ",status.Status)
-				PluginInstance.Progress(jobId, sdkModel.ProgressCommand, sdkModel.JobProgress{Progress: 100, Details: map[string]any{"msg": status.Message, "action": status.Action, "branch": status.Branch}})
-				continue
+				PluginInstance.Done(jobId,map[string]any{"msg": status.Message, "action": status.Action, "branch": status.Branch})
+				return
 			}
 			progress += 5
 			PluginInstance.Progress(jobId, sdkModel.ProgressCommand, sdkModel.JobProgress{Progress: progress, Details: map[string]any{"msg": status.Message, "action": status.Action, "branch": status.Branch}})
 			fmt.Println("GIT PROGRESS LOGG: ", status)
-		case <-time.After(20 * time.Minute):
-			PluginInstance.Progress(jobId, sdkModel.ProgressCommand, sdkModel.JobProgress{Progress: 100, Details: map[string]any{"error": "timeout during git operation"}})
+		case <-time.After(2 * time.Minute):
+			PluginInstance.Done(jobId,map[string]any{"error": "timeout during git operation"})
 			return
 		}
 
@@ -82,7 +82,7 @@ func workOnGitHandler(jobId string, git chan models.GitResponse) {
 }
 func workOnQueryGraph(jobId , joern_uuid string) {
 	// simulate long processing
-	sub := db.GetRedisClient().Subscribe(context.Background(), JoernResultsTableInRedis)
+	sub := db.GetRedisClient().Subscribe(PluginInstance.GetContext(), JoernResultsTableInRedis)
 
 	defer sub.Close()
 	ch := sub.Channel()
@@ -106,17 +106,17 @@ func workOnQueryGraph(jobId , joern_uuid string) {
 			err:=sonic.Unmarshal([]byte(message), &responsMap)
 			if err != nil {
 				fmt.Println("Done With Err Response")
-				PluginInstance.Progress(jobId, sdkModel.ProgressCommand, sdkModel.JobProgress{Progress: 100, Details: map[string]any{"error": err.Error()}})
+				PluginInstance.Done(jobId, map[string]any{"error": err.Error()})
 				return
 			}
 			FinaleResponse := map[string]any{"results": responsMap}
 				fmt.Println("Done With Success Response")
 
-			PluginInstance.Progress(jobId, sdkModel.ProgressCommand, sdkModel.JobProgress{Progress: 100, Details: FinaleResponse})
+			PluginInstance.Done(jobId, FinaleResponse)
 			return
 
-		case <-time.After(10 * time.Minute):
-			PluginInstance.Progress(jobId, sdkModel.ProgressCommand, sdkModel.JobProgress{Progress: 100, Details: map[string]any{"error": "timeout waiting for Joern response"}})
+		case <-time.After(1 * time.Minute):
+			PluginInstance.Done(jobId,map[string]any{"error": "timeout waiting for Joern response"})
 			return
 		}
 	}
