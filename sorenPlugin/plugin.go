@@ -10,7 +10,6 @@ import (
 	"github.com/SorenHQ/joern-port/models"
 	gitServices "github.com/SorenHQ/joern-port/services/git"
 	"github.com/bytedance/sonic"
-	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"github.com/nats-io/nats.go"
 	sdkv2 "github.com/sorenhq/go-plugin-sdk/gosdk"
@@ -88,38 +87,33 @@ func LoadSorenPluginServer() {
 				// Jsonui:     map[string]any{"type": "Control", "scope": "#/properties/project"},
 				Jsonschema: map[string]any{"properties": map[string]any{"project": map[string]any{"enum": makeEnumsProject()}}},
 			},
-			RequestHandler: func(msg *nats.Msg) any {
+			RequestHandler: func(msg *nats.Msg) {
 				// for example in this step we register a job in local database or external system - mae a scan in Joern
 				data := msg.Data
 				fmt.Println(string(data))
 				rawInput := sdkv2Models.ActionRequestContent{}
 				err = sonic.Unmarshal(data, &rawInput)
 				if err != nil {
-					return msg.Respond([]byte(`{"details": {"error": "bad request"}}`))
+					sdkv2.RejectWithBody(msg, map[string]any{"details": map[string]any{"error": "bad request"}})
+					return
 				}
 				selectedProject, ok := rawInput.Body["project"].(string)
 				if !ok {
-					return msg.Respond([]byte(`{"details": {"error": "invalid data"}}`))
-
+					sdkv2.RejectWithBody(msg, map[string]any{"details": map[string]any{"error": "invalid data"}})
+					return
 				}
 				inputDataFromSorenPlatform := models.GitRequest{
 					Project: selectedProject,
 					RepoURL: GetProjectUrl(selectedProject),
 				}
-				uuid, err := uuid.NewV6()
-				if err != nil {
-					return msg.Respond([]byte(`{"details": {"error": "service unavailable"}}`))
-				}
+				jobId := sdkv2.Accept(msg)
 				gitStatusHandler := make(chan models.GitResponse)
 				git := gitServices.NewGitDetailsHandler(gitStatusHandler)
-				fmt.Println(uuid.String())
+				fmt.Println(jobId)
 
-				err = msg.Respond([]byte(fmt.Sprintf(`{"jobId":"%s"}`, uuid.String())))
-				if err == nil {
-					go workOnGitHandler(uuid.String(), gitStatusHandler)
-					go git.ClonePull(inputDataFromSorenPlatform.Project, inputDataFromSorenPlatform.RepoURL, true)
-				}
-				return nil
+				go workOnGitHandler(jobId, gitStatusHandler)
+				go git.ClonePull(inputDataFromSorenPlatform.Project, inputDataFromSorenPlatform.RepoURL, true)
+
 			},
 		},
 		// Action #2 - scan code and create graph
@@ -130,30 +124,25 @@ func LoadSorenPluginServer() {
 				// Jsonui:     map[string]any{"type": "Control", "scope": "#/properties/project"},
 				Jsonschema: map[string]any{"properties": map[string]any{"project": map[string]any{"enum": makeEnumsProject()}}},
 			},
-			RequestHandler: func(msg *nats.Msg) any {
+			RequestHandler: func(msg *nats.Msg) {
 				// for example in this step we register a job in local database or external system - mae a scan in Joern
 				data := msg.Data
 				fmt.Println(string(data))
 				rawInput := sdkv2Models.ActionRequestContent{}
 				err = sonic.Unmarshal(data, &rawInput)
 				if err != nil {
-					return msg.Respond([]byte(`{"details": {"error": "bad request"}}`))
+					sdkv2.RejectWithBody(msg, map[string]any{"details": map[string]any{"error": "bad request"}})
+					return
 				}
 				selectedProject, ok := rawInput.Body["project"].(string)
 				if !ok {
-					return msg.Respond([]byte(`{"details": {"error": "invalid data"}}`))
-
+					sdkv2.RejectWithBody(msg, map[string]any{"details": map[string]any{"error": "invalid data"}})
+					return
 				}
 
-				uuid, err := uuid.NewV6()
-				if err != nil {
-					return msg.Respond([]byte(`{"details": {"error": "service unavailable"}}`))
-				}
-				fmt.Println(uuid.String())
-				msg.Respond([]byte(fmt.Sprintf(`{"jobId":"%s"}`, uuid.String())))
-				go openJoernProject(uuid.String(), selectedProject)
+				jobId := sdkv2.Accept(msg)
+				go openJoernProject(jobId, selectedProject)
 
-				return nil
 			},
 		},
 
@@ -181,43 +170,41 @@ func LoadSorenPluginServer() {
 					"required": []string{"project", "query"},
 				},
 			},
-			RequestHandler: func(msg *nats.Msg) any {
+			RequestHandler: func(msg *nats.Msg)  {
 				// for example in this step we register a job in local database or external system - mae a scan in Joern
 				data := msg.Data
 				fmt.Println(string(data))
 				rawInput := sdkv2Models.ActionRequestContent{}
 				err = sonic.Unmarshal(data, &rawInput)
 				if err != nil {
-					return msg.Respond([]byte(`{"details": {"error": "bad request"}}`))
+					sdkv2.RejectWithBody(msg, map[string]any{"details": map[string]any{"error": "bad request"}})
+					return
 				}
 				selectedProject, ok := rawInput.Body["project"].(string)
 				if !ok {
-					return msg.Respond([]byte(`{"details": {"error": "invalid data"}}`))
-
+					sdkv2.RejectWithBody(msg, map[string]any{"details": map[string]any{"error": "invalid data"}})
+					return
 				}
 				userQuery, ok := rawInput.Body["query"].(string)
 				if !ok {
-					return msg.Respond([]byte(`{"details": {"error": "invalid data"}}`))
+										sdkv2.RejectWithBody(msg, map[string]any{"details": map[string]any{"error": "invalid data"}})
+					return
 				}
-				uuid, err := uuid.NewV6()
-				if err != nil {
-					return msg.Respond([]byte(`{"details": {"error": "service unavailable"}}`))
-				}
+				jobId:=sdkv2.Accept(msg)
 				// make a Joern Command Request
 
-				msg.Respond([]byte(fmt.Sprintf(`{"jobId":"%s"}`, uuid.String())))
-				PluginInstance.Progress(uuid.String(), sdkv2Models.ProgressCommand, sdkv2Models.JobProgress{Progress: 20, Details: map[string]any{"msg": "hello"}})
+				PluginInstance.Progress(jobId, sdkv2Models.ProgressCommand, sdkv2Models.JobProgress{Progress: 20, Details: map[string]any{"msg": "hello"}})
 
 				fullQuery := fmt.Sprintf(`workspace.project("%s").get.cpg.get.%s`, selectedProject, userQuery)
 				url := fmt.Sprintf("%s/query", env.GetJoernUrl()) // async call
 				req_uuid, err := etc.JoernAsyncCommand(PluginInstance.GetContext(), url, fullQuery)
 				if err != nil {
-					PluginInstance.Done(uuid.String(),map[string]any{"error": err.Error()})
-					return nil
+					PluginInstance.Done(jobId, map[string]any{"error": err.Error()})
+					return 
 				}
-				go workOnQueryGraph(uuid.String(), req_uuid)
+				go workOnQueryGraph(jobId, req_uuid)
 
-				return nil
+	
 			},
 		},
 	})

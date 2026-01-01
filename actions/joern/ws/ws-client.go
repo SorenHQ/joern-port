@@ -11,14 +11,15 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-type MessageHandler interface {
-	Recv(string,string)
-}
+// type MessageHandler interface {
+// 	Recv(string,string)
+// }
+var rh *ResultHandlers
 type ResultHandlers struct {
 	// Define your result handlers here
 	conn           *websocket.Conn
 	serverUrl      string
-	messageHandler MessageHandler
+	messageChan chan string
 }
 
 func (rh *ResultHandlers) getResult(message []byte) {
@@ -31,13 +32,16 @@ func (rh *ResultHandlers) getResult(message []byte) {
 	defer cancel()
 
 	url := fmt.Sprintf("http://%s/result/%s", rh.serverUrl, string(message))
-	response, _, _ := etc.CustomCall(ctx, "GET", nil, url, nil)
+	response, statusCode, _ := etc.CustomCall(ctx, "GET", nil, url, nil)
+	if statusCode!=200{
+		fmt.Printf("joern server response code is %d\n",statusCode)
+	}
 	respBody, err := etc.ParseJoernStdoutToString(response)
 	if err != nil {
 		log.Println("Error parsing response:", err)
 		return
 	}
-	rh.messageHandler.Recv(string(message),respBody)
+	rh.messageChan <- string(message)+"||"+respBody
 }
 func (rh *ResultHandlers) wsConnection(serverURL string, messageChan chan []byte) error {
 	// Replace with your WebSocket server URL
@@ -67,7 +71,9 @@ func (rh *ResultHandlers) wsConnection(serverURL string, messageChan chan []byte
 	}()
 	return nil
 }
-
+func (rh *ResultHandlers) GetResultChannel() chan string {
+	return  rh.messageChan
+}
 func (rh *ResultHandlers) connectToServer() error {
 	messageChan := make(chan []byte)
 	ctx := context.WithoutCancel(context.Background())
@@ -90,20 +96,29 @@ func (rh *ResultHandlers) connectToServer() error {
 	return nil
 }
 
-func NewJoernResultHandlers(serverURL string, messHandler MessageHandler) (*ResultHandlers, error) {
+func NewJoernResultHandlers(serverURL string) (*ResultHandlers, error) {
 	url, err := url.Parse(serverURL)
 	if err != nil {
 		return nil, err
 	}
 
-	rh := ResultHandlers{
+	rh = &ResultHandlers{
 		conn:           nil,
 		serverUrl:      url.Host,
-		messageHandler: messHandler,
+		messageChan: make(chan string),
+
 	}
 	err = rh.connectToServer()
 	if err != nil {
 		return nil, err
 	}
-	return &rh, nil
+	return rh, nil
+}
+
+func GetJoernResultHandler()*ResultHandlers{
+	if rh ==nil{
+		return nil
+	}
+
+	return  rh
 }

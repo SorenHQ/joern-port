@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"log"
 
@@ -9,7 +8,6 @@ import (
 	wsHandler "github.com/SorenHQ/joern-port/actions/joern/ws"
 	projectControllers "github.com/SorenHQ/joern-port/actions/projects"
 	"github.com/SorenHQ/joern-port/env"
-	"github.com/SorenHQ/joern-port/etc/db"
 	"github.com/SorenHQ/joern-port/models"
 	joernPlugin "github.com/SorenHQ/joern-port/sorenPlugin"
 
@@ -31,7 +29,7 @@ func main() {
 	app.Use(cors.New())
 
 	app.Use(logger.New())
-	resultHandler, err := wsHandler.NewJoernResultHandlers(env.GetJoernUrl(), &MessageHandler{})
+	resultHandler, err := wsHandler.NewJoernResultHandlers(env.GetJoernUrl())
 	if err != nil {
 		log.Fatalf("Could not create result handler: %v", err)
 	}
@@ -49,14 +47,14 @@ func main() {
 	}
 }
 
-type MessageHandler struct{}
+// type MessageHandler struct{}
 
-func (h *MessageHandler) Recv(req_uuid,message string) {
-	// Implement message handling logic
-	fmt.Println("Received Joern WebSocket message:", message[:300],"...")
-	db.GetRedisClient().Publish(context.Background(),joernPlugin.JoernResultsTableInRedis, req_uuid+"||"+message)
+// func (h *MessageHandler) Recv(req_uuid,message string) {
+// 	// Implement message handling logic
+// 	fmt.Println("Received Joern WebSocket message:", message[:300],"...")
+// 	db.GetRedisClient().Publish(context.Background(),joernPlugin.JoernResultsTableInRedis, req_uuid+"||"+message)
 
-}
+// }
 
 func gitStatus(logger chan models.GitResponse) {
 	for {

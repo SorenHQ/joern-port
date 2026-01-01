@@ -12,7 +12,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/mehdi-shokohi/fiberValidation v1.0.3
 	github.com/nats-io/nats.go v1.47.0
-	github.com/sorenhq/go-plugin-sdk v0.1.5
+	github.com/sorenhq/go-plugin-sdk v0.1.8
 )
 
 require (
@@ -44,6 +44,7 @@ require (
 	github.com/mattn/go-runewidth v0.0.16 // indirect
 	github.com/nats-io/nkeys v0.4.11 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
+	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d // indirect
 	github.com/pjbgf/sha1cd v0.5.0 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/sergi/go-diff v1.4.0 // indirect
