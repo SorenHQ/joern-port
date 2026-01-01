@@ -50,7 +50,7 @@ func openJoernProject(jobId string, projectName string) {
 		re := regexp.MustCompile(`\s*"([^"]+)\"`)
 		out := re.FindStringSubmatch(respMap["stdout"].(string))
 		if len(out) > 1 {
-			PluginInstance.Done(jobId, map[string]any{"result": respMap})
+			PluginInstance.Done(jobId, map[string]any{"opened_project":out[1],"result": respMap})
 			return
 		}
 	}
