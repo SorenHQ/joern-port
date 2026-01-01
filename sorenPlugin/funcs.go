@@ -81,15 +81,12 @@ func workOnGitHandler(jobId string, git chan models.GitResponse) {
 
 }
 func workOnQueryGraph(jobId, joern_uuid string) {
-	// simulate long processing
-	// sub := db.GetRedisClient().Subscribe(PluginInstance.GetContext(), JoernResultsTableInRedis)
+
 	joern:=joernMessHandler.GetJoernResultHandler()
 	if joern==nil{
 		fmt.Println("joern websocket handler not found.")
 		return
 	}
-	// defer sub.Close()
-
 	ch := joern.GetResultChannel()
 	for {
 
@@ -105,7 +102,6 @@ func workOnQueryGraph(jobId, joern_uuid string) {
 			}
 			message := splitPayload[1]
 
-			// res, err := etc.ParseJoernResult(message)
 			responsMap :=[] map[string]any{}
 			err := sonic.Unmarshal([]byte(message), &responsMap)
 			if err != nil {

@@ -47,14 +47,6 @@ func main() {
 	}
 }
 
-// type MessageHandler struct{}
-
-// func (h *MessageHandler) Recv(req_uuid,message string) {
-// 	// Implement message handling logic
-// 	fmt.Println("Received Joern WebSocket message:", message[:300],"...")
-// 	db.GetRedisClient().Publish(context.Background(),joernPlugin.JoernResultsTableInRedis, req_uuid+"||"+message)
-
-// }
 
 func gitStatus(logger chan models.GitResponse) {
 	for {

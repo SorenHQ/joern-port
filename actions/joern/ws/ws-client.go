@@ -11,9 +11,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-// type MessageHandler interface {
-// 	Recv(string,string)
-// }
+
 var rh *ResultHandlers
 type ResultHandlers struct {
 	// Define your result handlers here
