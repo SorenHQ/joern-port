@@ -1,0 +1,399 @@
+type: collection.insomnia.rest/5.0
+schema_version: "5.1"
+name: Joern
+meta:
+  id: wrk_437497b8f9044e7da98d836eacf42fc5
+  created: 1766321287863
+  modified: 1766321287863
+  description: ""
+collection:
+  - name: JoernPort
+    meta:
+      id: fld_75c51072eccd44d680a3318406e76db3
+      created: 1761948307483
+      modified: 1762123248676
+      sortKey: -1761948307483
+      description: ""
+    children:
+      - url: http://localhost:9330/open
+        name: Open
+        meta:
+          id: req_0a41bf9b99e646beae0f5c0067108b32
+          created: 1761948311025
+          modified: 1764879145377
+          isPrivate: false
+          description: ""
+          sortKey: -1761948311025
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+            	"project": "SCA-Plan"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: User-Agent
+            value: insomnia/11.6.1
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: http://localhost:9330/query
+        name: Query
+        meta:
+          id: req_11d21a04daed4a67b5a10a67b9e317bd
+          created: 1761948371272
+          modified: 1767284873646
+          isPrivate: false
+          description: ""
+          sortKey: -1761896902198
+        method: POST
+        body:
+          mimeType: application/json
+          text: >-
+            {
+            	"mode": "sync",
+            	"query": "workspace.project(\"SCA-Plan\").get.cpg.get.method.l.toJsonPretty"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: User-Agent
+            value: insomnia/11.6.1
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: http://localhost:9330/git/repo
+        name: Git ClonePull
+        meta:
+          id: req_68e5e0c6e26f4f8cad2f15050ef7a6f7
+          created: 1762115401393
+          modified: 1762123318734
+          isPrivate: false
+          description: ""
+          sortKey: -1761948311125
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+            	"project": "gomini",
+            	"repo_url": "https://github.com/akilans/golang-mini-projects.git",
+            	"pull": false
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: User-Agent
+            value: insomnia/11.6.1
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: http://localhost:9330/query
+        name: Query-Async
+        meta:
+          id: req_7e15580dc1674ac8b0b17fdfe4875972
+          created: 1762121300645
+          modified: 1764894177387
+          isPrivate: false
+          description: ""
+          sortKey: -1761884049991.25
+        method: POST
+        body:
+          mimeType: application/json
+          text: >-
+            {
+            	"mode": "async",
+            	"query": "workspace.project(\"SCA-Plan\").get.cpg.get.method.l.toJsonPretty"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: User-Agent
+            value: insomnia/11.6.1
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: Joern-Direct-Test Use
+    meta:
+      id: fld_be6b2451d03948ee8705504727a994fe
+      created: 1762123168801
+      modified: 1762123220477
+      sortKey: -1762123168801
+      description: ""
+    children:
+      - url: http://localhost:8081/result/dc529922-45dc-4ddd-bcdf-bee258e41461
+        name: Get Result
+        meta:
+          id: req_1df9e8eb809f4754a01e0bede9a1b0ff
+          created: 1761845493371
+          modified: 1767283552347
+          isPrivate: false
+          description: ""
+          sortKey: -1762123173223
+        method: GET
+        headers:
+          - name: User-Agent
+            value: insomnia/11.6.1
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: http://localhost:8081/query-sync
+        name: New Query
+        meta:
+          id: req_d3501b3ed62d4f4eba77df9c4c9df0a7
+          created: 1761845779609
+          modified: 1762123184106
+          isPrivate: false
+          description: ""
+          sortKey: -1762123173173
+        method: POST
+        body:
+          mimeType: application/json
+          text: >-
+            {
+            	"query":"importCode(\"/media/FDrive/Soren-Project/plugin-repos/Joern/joern-output-parser/projects/gomini\",\"gomini\")"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: User-Agent
+            value: insomnia/11.6.1
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: http://localhost:8081/query-sync
+        name: New Query-ImportCode
+        meta:
+          id: req_4a4942c610144496834da20b4d632979
+          created: 1761846702245
+          modified: 1762123186499
+          isPrivate: false
+          description: ""
+          sortKey: -1762123173148
+        method: POST
+        body:
+          mimeType: application/json
+          text: >-
+            {
+            	"query":"importCode(\"/home/mehdi/Desktop/Soren-Project/plugin-repos/Joern/codes/x42.c\")"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: User-Agent
+            value: insomnia/11.6.1
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: http://localhost:8081/query-sync
+        name: Query-ImportCode-Sync
+        meta:
+          id: req_f83795240d224287b35a7421859b8e1e
+          created: 1761847003043
+          modified: 1762123190394
+          isPrivate: false
+          description: ""
+          sortKey: -1762123173154.25
+        method: POST
+        body:
+          mimeType: application/json
+          text: >-
+            {
+            	"query":"importCode(\"/home/mehdi/Desktop/Soren-Project/plugin-repos/Joern/joern-cli/workspace/x42.c/cpg.bin\")"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: User-Agent
+            value: insomnia/11.6.1
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: http://localhost:8081/query
+        name: New Query-Async
+        meta:
+          id: req_a1cf7987a1844a4abc617c4a11481258
+          created: 1761847409152
+          modified: 1762123177638
+          isPrivate: false
+          description: ""
+          sortKey: -1762123173123
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+            	"query":"cpg.method.l.toJson.mkString"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: User-Agent
+            value: insomnia/11.6.1
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: http://localhost:8081/query
+        name: Query-ImportCode-ASync
+        meta:
+          id: req_162169e892e9403da062a3c9bd359c13
+          created: 1761854789787
+          modified: 1762123197675
+          isPrivate: false
+          description: ""
+          sortKey: -1762123173157.375
+        method: POST
+        body:
+          mimeType: application/json
+          text: >-
+            {
+            	"query":"importCode(\"/home/mehdi/Desktop/Soren-Project/plugin-repos/Joern/codes/py/py-mini\")"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: User-Agent
+            value: insomnia/11.6.1
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: http://localhost:8081/query-sync
+        name: Query-Commands
+        meta:
+          id: req_407a651f695848058acb8f03e64672d8
+          created: 1761854916065
+          modified: 1762123192947
+          isPrivate: false
+          description: ""
+          sortKey: -1762123173151.125
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+            	"query":"workspace.project(\"gomini\").get.cpg.get.method.l.toJson"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: User-Agent
+            value: insomnia/11.6.1
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: http://localhost:8081/query-sync
+        name: Open
+        meta:
+          id: req_5b55adb9786140dfa676170090f59056
+          created: 1761923753199
+          modified: 1762123195068
+          isPrivate: false
+          description: ""
+          sortKey: -1762123173152.6875
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+            	"query":"open(\"py-mini\").get.name"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: User-Agent
+            value: insomnia/11.6.1
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: ws://localhost:8081/connect
+        name: New WebSocket Request
+        meta:
+          id: ws-req_8bafedd6c02c4239856b186e792a593f
+          created: 1761845889871
+          modified: 1762123173111
+          description: ""
+          sortKey: -1762123173023
+        settings:
+          encodeUrl: true
+          cookies:
+            store: true
+            send: true
+          followRedirects: global
+        headers:
+          - name: User-Agent
+            value: insomnia/11.6.1
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_622c55eff8844862a41fe23bf140352f
+    created: 1761845485390
+    modified: 1761845485390
+environments:
+  name: Base Environment
+  meta:
+    id: env_4edafba698d346a9bebb1c66f880168e
+    created: 1761845485343
+    modified: 1761845485343
+    isPrivate: false
