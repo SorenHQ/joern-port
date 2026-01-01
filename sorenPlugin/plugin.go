@@ -170,7 +170,7 @@ func LoadSorenPluginServer() {
 					"required": []string{"project", "query"},
 				},
 			},
-			RequestHandler: func(msg *nats.Msg)  {
+			RequestHandler: func(msg *nats.Msg) {
 				// for example in this step we register a job in local database or external system - mae a scan in Joern
 				data := msg.Data
 				fmt.Println(string(data))
@@ -187,10 +187,10 @@ func LoadSorenPluginServer() {
 				}
 				userQuery, ok := rawInput.Body["query"].(string)
 				if !ok {
-										sdkv2.RejectWithBody(msg, map[string]any{"details": map[string]any{"error": "invalid data"}})
+					sdkv2.RejectWithBody(msg, map[string]any{"details": map[string]any{"error": "invalid data"}})
 					return
 				}
-				jobId:=sdkv2.Accept(msg)
+				jobId := sdkv2.Accept(msg)
 				// make a Joern Command Request
 
 				PluginInstance.Progress(jobId, sdkv2Models.ProgressCommand, sdkv2Models.JobProgress{Progress: 20, Details: map[string]any{"msg": "hello"}})
@@ -200,11 +200,10 @@ func LoadSorenPluginServer() {
 				req_uuid, err := etc.JoernAsyncCommand(PluginInstance.GetContext(), url, fullQuery)
 				if err != nil {
 					PluginInstance.Done(jobId, map[string]any{"error": err.Error()})
-					return 
+					return
 				}
 				go workOnQueryGraph(jobId, req_uuid)
 
-	
 			},
 		},
 	})
