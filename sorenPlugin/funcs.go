@@ -106,7 +106,7 @@ func workOnQueryGraph(jobId, joern_uuid string) {
 			err := sonic.Unmarshal([]byte(message), &responsMap)
 			if err != nil {
 				fmt.Println("Done With Err Response")
-				PluginInstance.Done(jobId, map[string]any{"error": err.Error()})
+				PluginInstance.Done(jobId, map[string]any{"result": message})
 				return
 			}
 			FinaleResponse := map[string]any{"results": responsMap}
