@@ -22,15 +22,29 @@ type GitService struct {
 // impl io.Writer
 func (gs *GitService) Write(p []byte) (n int, err error) {
 	if gs.detailChan == nil {
-		return 0, errors.New("detail channel not initialized")
+		return len(p), nil // Return success but don't send if channel is nil
 	}
-	gs.detailChan <- models.GitResponse{Action: "log", Status: "success", Message: string(p)}
+	// Use recover to handle panics from sending to closed channels
+	defer func() {
+		if r := recover(); r != nil {
+			// Channel was closed, ignore the error and continue
+			log.Printf("Git progress channel closed, skipping message: %v", r)
+		}
+	}()
+	// Use non-blocking send to avoid deadlock if channel is full
+	select {
+	case gs.detailChan <- models.GitResponse{Action: "log", Status: "success", Message: string(p)}:
+		// Successfully sent
+	default:
+		// Channel is full, skip this message to avoid blocking
+		// The receiver might not be reading fast enough
+	}
 	return len(p), nil
 }
 
 func (gs *GitService) ClonePull(project, url string, pull bool) {
 	if gs.detailChan == nil {
-		gs.detailChan = make(chan models.GitResponse)
+		gs.detailChan = make(chan models.GitResponse, 100) // Buffered channel to prevent blocking
 		defer close(gs.detailChan)
 	}
 	base := env.GetProjectReposPath()

@@ -8,6 +8,7 @@ import (
 
 	"github.com/SorenHQ/joern-port/etc"
 
+	"github.com/bytedance/sonic"
 	"github.com/gorilla/websocket"
 )
 
@@ -34,12 +35,19 @@ func (rh *ResultHandlers) getResult(message []byte) {
 	if statusCode!=200{
 		fmt.Printf("joern server response code is %d\n",statusCode)
 	}
-	respBody, err := etc.ParseJoernStdoutToString(response)
+
+	jsonObj, err := etc.ParseJoernStdoutJsonObject(response)
 	if err != nil {
 		log.Println("Error parsing response:", err)
 		return
 	}
-	rh.messageChan <- string(message)+"||"+respBody
+	// Marshal the JSON object back to string for the channel
+	jsonBytes, err := sonic.Marshal(jsonObj)
+	if err != nil {
+		log.Println("Error marshaling JSON object:", err)
+		return
+	}
+	rh.messageChan <- string(message)+"||"+string(jsonBytes)
 }
 func (rh *ResultHandlers) wsConnection(serverURL string, messageChan chan []byte) error {
 	// Replace with your WebSocket server URL
