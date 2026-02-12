@@ -85,7 +85,7 @@ func LoadSorenPluginServer() {
 			Title:  "Clone/Pull Repo",
 			Form: sdkv2Models.ActionFormBuilder{
 				// Jsonui:     map[string]any{"type": "Control", "scope": "#/properties/project"},
-				Jsonschema: map[string]any{"properties": map[string]any{"project": map[string]any{"enum": makeEnumsProject()}}},
+				Jsonschema: map[string]any{"type": "object","properties": map[string]any{"project": map[string]any{"enum": makeEnumsProject()}}},
 			},
 			RequestHandler: func(msg *nats.Msg) {
 				// for example in this step we register a job in local database or external system - mae a scan in Joern
@@ -122,7 +122,7 @@ func LoadSorenPluginServer() {
 			Title:  "Open Project in Joern and Generate Graph",
 			Form: sdkv2Models.ActionFormBuilder{
 				// Jsonui:     map[string]any{"type": "Control", "scope": "#/properties/project"},
-				Jsonschema: map[string]any{"properties": map[string]any{"project": map[string]any{"enum": makeEnumsProject()}}},
+				Jsonschema: map[string]any{"type": "object","properties": map[string]any{"project": map[string]any{"enum": makeEnumsProject()}}},
 			},
 			RequestHandler: func(msg *nats.Msg) {
 				// for example in this step we register a job in local database or external system - mae a scan in Joern
