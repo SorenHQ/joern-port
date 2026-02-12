@@ -16,7 +16,7 @@ import (
 	sdkv2Models "github.com/sorenhq/go-plugin-sdk/gosdk/models"
 )
 
-var PluginInstance *sdkv2.Plugin
+// var sdkv2.GetPlugin() *sdkv2.Plugin
 
 func LoadSorenPluginServer() {
 
@@ -84,8 +84,8 @@ func LoadSorenPluginServer() {
 			Method: "prepare",
 			Title:  "Clone/Pull Repo",
 			Form: sdkv2Models.ActionFormBuilder{
-				// Jsonui:     map[string]any{"type": "Control", "scope": "#/properties/project"},
-				Jsonschema: map[string]any{"properties": map[string]any{"project": map[string]any{"enum": makeEnumsProject()}}},
+				Jsonui:     map[string]any{"type": "Control", "scope": "#/properties/project"},
+				Jsonschema: map[string]any{"type": "object","properties": map[string]any{"project": map[string]any{"enum": makeEnumsProject()}}},
 			},
 			RequestHandler: func(msg *nats.Msg) {
 				// for example in this step we register a job in local database or external system - mae a scan in Joern
@@ -94,19 +94,19 @@ func LoadSorenPluginServer() {
 				rawInput := sdkv2Models.ActionRequestContent{}
 				err = sonic.Unmarshal(data, &rawInput)
 				if err != nil {
-					sdkv2.RejectWithBody(msg, map[string]any{"details": map[string]any{"error": "bad request"}})
+					sdkv2.RejectReq(msg, map[string]any{"details": map[string]any{"error": "bad request"}})
 					return
 				}
 				selectedProject, ok := rawInput.Body["project"].(string)
 				if !ok {
-					sdkv2.RejectWithBody(msg, map[string]any{"details": map[string]any{"error": "invalid data"}})
+					sdkv2.RejectReq(msg, map[string]any{"details": map[string]any{"error": "invalid data"}})
 					return
 				}
 				inputDataFromSorenPlatform := models.GitRequest{
 					Project: selectedProject,
 					RepoURL: GetProjectUrl(selectedProject),
 				}
-				jobId := sdkv2.Accept(msg)
+				jobId := sdkv2.AcceptReq(msg)
 				gitStatusHandler := make(chan models.GitResponse)
 				git := gitServices.NewGitDetailsHandler(gitStatusHandler)
 				fmt.Println(jobId)
@@ -122,7 +122,7 @@ func LoadSorenPluginServer() {
 			Title:  "Open Project in Joern and Generate Graph",
 			Form: sdkv2Models.ActionFormBuilder{
 				// Jsonui:     map[string]any{"type": "Control", "scope": "#/properties/project"},
-				Jsonschema: map[string]any{"properties": map[string]any{"project": map[string]any{"enum": makeEnumsProject()}}},
+				Jsonschema: map[string]any{"type": "object","properties": map[string]any{"project": map[string]any{"enum": makeEnumsProject()}}},
 			},
 			RequestHandler: func(msg *nats.Msg) {
 				// for example in this step we register a job in local database or external system - mae a scan in Joern
@@ -131,16 +131,16 @@ func LoadSorenPluginServer() {
 				rawInput := sdkv2Models.ActionRequestContent{}
 				err = sonic.Unmarshal(data, &rawInput)
 				if err != nil {
-					sdkv2.RejectWithBody(msg, map[string]any{"details": map[string]any{"error": "bad request"}})
+					sdkv2.RejectReq(msg, map[string]any{"details": map[string]any{"error": "bad request"}})
 					return
 				}
 				selectedProject, ok := rawInput.Body["project"].(string)
 				if !ok {
-					sdkv2.RejectWithBody(msg, map[string]any{"details": map[string]any{"error": "invalid data"}})
+					sdkv2.RejectReq(msg, map[string]any{"details": map[string]any{"error": "invalid data"}})
 					return
 				}
 
-				jobId := sdkv2.Accept(msg)
+				jobId := sdkv2.AcceptReq(msg)
 				go openJoernProject(jobId, selectedProject)
 
 			},
@@ -177,29 +177,29 @@ func LoadSorenPluginServer() {
 				rawInput := sdkv2Models.ActionRequestContent{}
 				err = sonic.Unmarshal(data, &rawInput)
 				if err != nil {
-					sdkv2.RejectWithBody(msg, map[string]any{"details": map[string]any{"error": "bad request"}})
+					sdkv2.RejectReq(msg, map[string]any{"details": map[string]any{"error": "bad request"}})
 					return
 				}
 				selectedProject, ok := rawInput.Body["project"].(string)
 				if !ok {
-					sdkv2.RejectWithBody(msg, map[string]any{"details": map[string]any{"error": "invalid data"}})
+					sdkv2.RejectReq(msg, map[string]any{"details": map[string]any{"error": "invalid data"}})
 					return
 				}
 				userQuery, ok := rawInput.Body["query"].(string)
 				if !ok {
-					sdkv2.RejectWithBody(msg, map[string]any{"details": map[string]any{"error": "invalid data"}})
+					sdkv2.RejectReq(msg, map[string]any{"details": map[string]any{"error": "invalid data"}})
 					return
 				}
-				jobId := sdkv2.Accept(msg)
+				jobId := sdkv2.AcceptReq(msg)
 				// make a Joern Command Request
 
-				PluginInstance.Progress(jobId, sdkv2Models.ProgressCommand, sdkv2Models.JobProgress{Progress: 20, Details: map[string]any{"msg": "hello"}})
+				sdkv2.GetPlugin().Progress(jobId,  sdkv2Models.CommandPayload{Progress: 20, Details: map[string]any{"msg": "hello"}})
 
 				fullQuery := fmt.Sprintf(`workspace.project("%s").get.cpg.get.%s`, selectedProject, userQuery)
 				url := fmt.Sprintf("%s/query", env.GetJoernUrl()) // async call
-				req_uuid, err := etc.JoernAsyncCommand(PluginInstance.GetContext(), url, fullQuery)
+				req_uuid, err := etc.JoernAsyncCommand(sdkv2.GetPlugin().GetContext(), url, fullQuery)
 				if err != nil {
-					PluginInstance.Done(jobId, map[string]any{"error": err.Error()})
+					sdkv2.GetPlugin().Done(jobId, map[string]any{"error": err.Error()})
 					return
 				}
 				go workOnQueryGraph(jobId, req_uuid)
@@ -209,7 +209,6 @@ func LoadSorenPluginServer() {
 	})
 	event := sdkv2.NewEventLogger(sdkInstance)
 	event.Log("remote-mate-pc", sdkv2Models.LogLevelInfo, fmt.Sprintf("%s Plugin Started , Version %s", plugin.Intro.Name, plugin.Intro.Version), nil)
-	PluginInstance = plugin
 
 	err = plugin.Start()
 	if err != nil {
