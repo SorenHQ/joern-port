@@ -34,17 +34,21 @@ func (rh *ResultHandlers) getResult(message []byte) {
 	response, statusCode, _ := etc.CustomCall(ctx, "GET", nil, url, nil)
 	if statusCode!=200{
 		fmt.Printf("joern server response code is %d\n",statusCode)
+		rh.messageChan <- string(message)+"||"+string("service not available")
+		return
 	}
 
 	jsonObj, err := etc.ParseJoernStdoutJsonObject(response)
 	if err != nil {
 		log.Println("Error parsing response:", err)
+		rh.messageChan <- string(message)+"||"+string(response)
 		return
 	}
 	// Marshal the JSON object back to string for the channel
 	jsonBytes, err := sonic.Marshal(jsonObj)
 	if err != nil {
 		log.Println("Error marshaling JSON object:", err)
+		rh.messageChan <- string(message)+"||"+string(response)
 		return
 	}
 	rh.messageChan <- string(message)+"||"+string(jsonBytes)

@@ -12,9 +12,10 @@ func cloneRepoHandler(c *fiber.Ctx) error {
 	if err := c.BodyParser(&input); err != nil {
 		return c.JSON(models.Response{Data: nil, Error: fiber.ErrBadRequest})
 	}
-	err := gitServices.GitClonePull(input.Project, input.RepoURL, input.Pull)
-	if err != nil {
-		return c.JSON(models.Response{Data: nil, Error: err})
-	}
+	gitchan := make(chan models.GitResponse)
+
+	git:=gitServices.NewGitDetailsHandler(gitchan)
+	go git.ClonePull(input.Project, input.RepoURL, input.Pull)
+
 	return c.JSON(models.Response{Data: "accepted", Error: nil})
 }

@@ -81,7 +81,7 @@ func workOnGitHandler(jobId string, git chan models.GitResponse) {
 			}
 			progress += 5
 			if progress >99{
-				progress = 99
+				progress = 99 // 100 in progress means to finished job
 			}
 			sdkv2.GetPlugin().Progress(jobId, sdkModel.CommandPayload{Progress: progress, Details: map[string]any{"msg": status.Message, "action": status.Action, "branch": status.Branch}})
 			fmt.Println("GIT PROGRESS LOGG: ", status)

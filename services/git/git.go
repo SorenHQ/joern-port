@@ -1,7 +1,6 @@
 package gitServices
 
 import (
-	"errors"
 	"fmt"
 	"log"
 
@@ -13,7 +12,6 @@ import (
 	"github.com/go-git/go-git/v6"
 )
 
-var gitService *GitService
 
 type GitService struct {
 	detailChan chan models.GitResponse
@@ -44,9 +42,9 @@ func (gs *GitService) Write(p []byte) (n int, err error) {
 
 func (gs *GitService) ClonePull(project, url string, pull bool) {
 	if gs.detailChan == nil {
-		gs.detailChan = make(chan models.GitResponse, 100) // Buffered channel to prevent blocking
-		defer close(gs.detailChan)
+		gs.detailChan = make(chan models.GitResponse) 
 	}
+	defer close(gs.detailChan)
 	base := env.GetProjectReposPath()
 	dir := fmt.Sprintf("%s/%s", base, project)
 	// Check if repo already exists
@@ -122,16 +120,11 @@ func NewGitDetailsHandler(detailChan chan models.GitResponse) *GitService {
 }
 
 func NewGitLogHandler(detailChan chan models.GitResponse) *GitService {
-	if gitService == nil {
-		gitService = &GitService{detailChan: detailChan}
+	if detailChan == nil {
+		log.Default().Println("git service not initialized")
+		return  nil
 	}
 	log.Default().Println("Git Logger service initialized")
-	return gitService
-}
-func GitClonePull(project, url string, pull bool) error {
-	if gitService == nil {
-		return errors.New("git service not initialized")
-	}
-	go gitService.ClonePull(project, url, pull)
-	return nil
+	return 	 &GitService{detailChan: detailChan}
+
 }

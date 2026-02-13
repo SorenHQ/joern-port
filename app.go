@@ -1,14 +1,12 @@
 package main
 
 import (
-	"fmt"
 	"log"
 
 	joernControllers "github.com/SorenHQ/joern-port/actions/joern"
 	wsHandler "github.com/SorenHQ/joern-port/actions/joern/ws"
 	projectControllers "github.com/SorenHQ/joern-port/actions/projects"
 	"github.com/SorenHQ/joern-port/env"
-	"github.com/SorenHQ/joern-port/models"
 	joernPlugin "github.com/SorenHQ/joern-port/sorenPlugin"
 
 	"github.com/bytedance/sonic"
@@ -36,10 +34,7 @@ func main() {
 	//Joern Api and websocket handler
 	joernControllers.JoernRouter(app, resultHandler)
 
-	// Git Api and Status Handler
-	GitLogger := make(chan models.GitResponse)
-	go gitStatus(GitLogger)
-	projectControllers.GitProjectsRoutes(app, GitLogger)
+	projectControllers.GitProjectsRoutes(app)
 	go joernPlugin.LoadSorenPluginServer()
 	// Start Server
 	if err := app.Listen(env.GetPort()); err != nil {
@@ -48,10 +43,4 @@ func main() {
 }
 
 
-func gitStatus(logger chan models.GitResponse) {
-	for {
-		status := <-logger
-		fmt.Println("Received GIT status:", status)
-		//call python api 
-	}
-}
+
