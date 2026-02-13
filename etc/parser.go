@@ -92,3 +92,41 @@ func ParseJoernStdoutToString(raw []byte) (string, error) {
 	}
 
 }
+
+// ParseJoernStdoutJsonObject parses stdout that contains a JSON object in triple quotes.
+// It extracts JSON objects from patterns like: val res3: String = """{...}"""
+// Returns the parsed JSON object as map[string]any
+func ParseJoernStdoutJsonObject(raw []byte) (map[string]any, error) {
+	// Parse the outer JSON structure (success, uuid, stdout)
+	data := map[string]any{}
+	err := sonic.Unmarshal(raw, &data)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse outer JSON: %w", err)
+	}
+
+	// Extract stdout field
+	stdout, ok := data["stdout"].(string)
+	if !ok {
+		return nil, errors.New("stdout field not found or not a string")
+	}
+
+	// Remove ANSI escape codes
+	ansiRegexp := regexp.MustCompile(`\x1B\[[0-?]*[ -/]*[@-~]`)
+	cleanText := ansiRegexp.ReplaceAllString(stdout, "")
+
+	// Find the pattern: val res\d+ : String = """{...}"""
+	// Extract everything between the triple quotes
+	re := regexp.MustCompile(`(?s)val\s+res\d+\s*:\s*String\s*=\s*"""(.*?)"""`)
+	match := re.FindStringSubmatch(cleanText)
+	if len(match) < 2 {
+		return nil, errors.New("no JSON object pattern found in stdout")
+	}
+
+	// Parse the extracted JSON object
+	jsonObj := map[string]any{}
+	err = sonic.Unmarshal([]byte(match[1]), &jsonObj)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse JSON object: %w", err)
+	}
+	return jsonObj, nil
+}

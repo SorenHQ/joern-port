@@ -151,7 +151,24 @@ func LoadSorenPluginServer() {
 			Method: "graph.query",
 			Title:  "Query On Graph",
 			Form: sdkv2Models.ActionFormBuilder{
-				// Jsonui:     map[string]any{"type": "Control", "scope": "#/properties/query"},
+				// Make "query" a multi-line textarea in Soren Panel
+				Jsonui: map[string]any{
+					"type": "VerticalLayout",
+					"elements": []map[string]any{
+						{
+							"type":  "Control",
+							"scope": "#/properties/project",
+						},
+						{
+							"type":  "Control",
+							"scope": "#/properties/query",
+							"options": map[string]any{
+								"multi": true,
+								"rows":  8,
+							},
+						},
+					},
+				},
 				Jsonschema: map[string]any{
 					"type": "object",
 					"properties": map[string]any{
@@ -165,6 +182,10 @@ func LoadSorenPluginServer() {
 							"type":        "string",
 							"title":       "Query to Execute",
 							"description": "Query to Execute on Joern Graph",
+							// Hint for Soren Panel schema renderer to use a textarea
+							"multiline":   true,
+							// Extra hint for other JSON-schema-based UIs
+							"format":      "textarea",
 						},
 					},
 					"required": []string{"project", "query"},
@@ -195,7 +216,7 @@ func LoadSorenPluginServer() {
 
 				sdkv2.GetPlugin().Progress(jobId,  sdkv2Models.CommandPayload{Progress: 20, Details: map[string]any{"msg": "hello"}})
 
-				fullQuery := fmt.Sprintf(`workspace.project("%s").get.cpg.get.%s`, selectedProject, userQuery)
+				fullQuery := fmt.Sprintf("open(\"%s\")\n%s", selectedProject, userQuery)
 				url := fmt.Sprintf("%s/query", env.GetJoernUrl()) // async call
 				req_uuid, err := etc.JoernAsyncCommand(sdkv2.GetPlugin().GetContext(), url, fullQuery)
 				if err != nil {
@@ -230,25 +251,27 @@ func settingsUpdateHandler(msg *nats.Msg) any {
 		return msg.Respond([]byte(`{"status": "not_accepted"}`))
 
 	}
+
+	// Keep in-memory settings in sync so @settings returns fresh data
+	if sdkv2.GetPlugin() != nil && sdkv2.GetPlugin().Settings != nil {
+		sdkv2.GetPlugin().Settings.Data = settings
+	}
+
+	// Also refresh any enums that depend on settings (e.g. project list)
+	updateProjectEnum(settings)
+
 	return msg.Respond([]byte(`{"status": "accepted"}`))
 }
 
 func makeEnumsProject() []string {
-	contentJson, err := os.ReadFile("my_database.json")
-	if err != nil {
-		return []string{}
-	}
-
-	savedSettings := map[string]any{}
-	err = sonic.Unmarshal(contentJson, &savedSettings)
-	if err != nil {
-		return []string{}
-	}
-	if savedSettings["project"] == nil {
+	// Build the enum for the project field based on the latest saved settings
+	savedSettings := getSavedData()
+	project, ok := savedSettings["project"].(string)
+	if !ok || project == "" {
 		return []string{}
 	}
 	fmt.Println(savedSettings)
-	return []string{savedSettings["project"].(string)}
+	return []string{project}
 
 }
 func getSavedData() map[string]any {
@@ -263,7 +286,51 @@ func getSavedData() map[string]any {
 		return map[string]any{}
 	}
 	return savedSettings
+}
 
+// updateProjectEnum updates any schema enums that depend on the "project" setting
+// so that Soren Panel sees the latest value without needing a plugin restart.
+func updateProjectEnum(settings map[string]any) {
+	if sdkv2.GetPlugin() == nil {
+		return
+	}
+
+	project, ok := settings["project"].(string)
+	if !ok || project == "" {
+		return
+	}
+	enumValue := []string{project}
+
+	// Update settings schema project enum if present
+	if sdkv2.GetPlugin().Settings != nil && sdkv2.GetPlugin().Settings.Jsonschema != nil {
+		if props, ok := sdkv2.GetPlugin().Settings.Jsonschema["properties"].(map[string]any); ok {
+			if proj, ok := props["project"].(map[string]any); ok {
+				proj["enum"] = enumValue
+				props["project"] = proj
+				sdkv2.GetPlugin().Settings.Jsonschema["properties"] = props
+			}
+		}
+	}
+
+	// Update all action forms that have a project field
+	for i := range sdkv2.GetPlugin().Actions {
+		formSchema := sdkv2.GetPlugin().Actions[i].Form.Jsonschema
+		if formSchema == nil {
+			continue
+		}
+		props, ok := formSchema["properties"].(map[string]any)
+		if !ok {
+			continue
+		}
+		proj, ok := props["project"].(map[string]any)
+		if !ok {
+			continue
+		}
+		proj["enum"] = enumValue
+		props["project"] = proj
+		formSchema["properties"] = props
+		sdkv2.GetPlugin().Actions[i].Form.Jsonschema = formSchema
+	}
 }
 func GetProjectUrl(project string) string {
 	contentJson, err := os.ReadFile("my_database.json")

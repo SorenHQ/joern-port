@@ -61,14 +61,22 @@ func openJoernProject(jobId string, projectName string) {
 }
 func workOnGitHandler(jobId string, git chan models.GitResponse) {
 	progress := 0
-	defer close(git)
+	// Don't close the channel here - let ClonePull close it when done
 	for {
 		select {
-		case status := <-git:
+		case status, ok := <-git:
+			if !ok {
+				// Channel closed by ClonePull, exit
+				return
+			}
 			fmt.Println(status.Status)
-			if status.Status == "success" {
+			if status.Status == "success" && (status.Action == "clone" || status.Action == "pull" || status.Action == "repo") {
 				fmt.Println("Done ", status.Status)
 				sdkv2.GetPlugin().Done(jobId, map[string]any{"msg": status.Message, "action": status.Action, "branch": status.Branch})
+				return
+			}
+			if status.Status == "error" {
+				sdkv2.GetPlugin().Done(jobId, map[string]any{"error": status.Error, "action": status.Action})
 				return
 			}
 			progress += 5
@@ -107,7 +115,7 @@ func workOnQueryGraph(jobId, joern_uuid string) {
 			}
 			message := splitPayload[1]
 
-			responsMap :=[] map[string]any{}
+			responsMap := map[string]any{}
 			err := sonic.Unmarshal([]byte(message), &responsMap)
 			if err != nil {
 				fmt.Println("Done With Err Response")
